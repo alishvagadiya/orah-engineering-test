@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm"
 import { CreateStudentInput, UpdateStudentInput } from "../interface/student.interface"
 
 @Entity()
@@ -14,6 +14,12 @@ export class Student {
 
   @Column()
   photo_url: string
+
+  @CreateDateColumn()
+  created_at: Date
+
+  @UpdateDateColumn()
+  updated_at: Date
 
   public prepareToCreate(input: CreateStudentInput) {
     this.first_name = input.first_name

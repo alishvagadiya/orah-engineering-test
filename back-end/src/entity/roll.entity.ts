@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm"
 import { CreateRollInput, UpdateRollInput } from "../interface/roll.interface"
 
 @Entity()
@@ -11,6 +11,12 @@ export class Roll {
 
   @Column()
   completed_at: Date
+
+  @CreateDateColumn()
+  created_at: Date
+
+  @UpdateDateColumn()
+  updated_at: Date
 
   public prepareToCreate(input: CreateRollInput) {
     this.name = input.name
