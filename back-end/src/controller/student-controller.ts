@@ -10,6 +10,10 @@ export class StudentController {
     return this.studentRepository.find()
   }
 
+  async getStudent(request: Request, response: Response, next: NextFunction) {
+    return this.studentRepository.findOne(request.body.id)
+  }
+
   async createStudent(request: Request, response: Response, next: NextFunction) {
     const { body: params } = request
 
@@ -27,7 +31,8 @@ export class StudentController {
   async updateStudent(request: Request, response: Response, next: NextFunction) {
     const { body: params } = request
 
-    this.studentRepository.findOne(params.id).then((student) => {
+    // add logic to handle update request for undefined id or deleted id data
+    return this.studentRepository.findOne(params.id).then((student) => {
       const updateStudentInput: UpdateStudentInput = {
         id: params.id,
         first_name: params.first_name,
@@ -41,7 +46,7 @@ export class StudentController {
   }
 
   async removeStudent(request: Request, response: Response, next: NextFunction) {
-    let studentToRemove = await this.studentRepository.findOne(request.params.id)
-    await this.studentRepository.remove(studentToRemove)
+    let studentToRemove = await this.studentRepository.findOne(request.body.id)
+    return await this.studentRepository.remove(studentToRemove)
   }
 }
