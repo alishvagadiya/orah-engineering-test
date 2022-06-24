@@ -53,9 +53,10 @@ export class RollController {
   }
 
   async getRoll(request: Request, response: Response, next: NextFunction) {
-    return this.studentRollStateRepository.find({ roll_id: request.params.id })
+    return this.studentRollStateRepository.find({ roll_id: request.body.roll_id })
   }
 
+  // input data comes in batch(array) of student data
   async addStudentRollStates(request: Request, response: Response, next: NextFunction) {
     const { body: params } = request
     const studentRollStates: StudentRollState[] = map(params, (param) => {
@@ -73,6 +74,7 @@ export class RollController {
     return this.studentRollStateRepository.save(studentRollStates)
   }
 
+  // input data comes for single student data
   async addStudentRollState(request: Request, response: Response, next: NextFunction) {
     const { body: params } = request
 
@@ -89,7 +91,7 @@ export class RollController {
   async updateStudentRollState(request: Request, response: Response, next: NextFunction) {
     const { body: params } = request
 
-    this.studentRollStateRepository.findOne(params.id).then((studentRollState) => {
+    return this.studentRollStateRepository.findOne(params.id).then((studentRollState) => {
       const updateStudentRollStateInput: UpdateStudentRollStateInput = {
         id: params.id,
         roll_id: params.roll_id,
