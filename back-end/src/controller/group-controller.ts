@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express"
-import { getRepository } from "typeorm"
+import { getRepository, getManager } from "typeorm"
 import { Group } from "../entity/group.entity"
 import { CreateGroupInput, UpdateGroupInput } from "../interface/group.interface"
 
@@ -55,8 +55,30 @@ export class GroupController {
   }
 
   async getGroupStudents(request: Request, response: Response, next: NextFunction) {
-    // Task 1:
-    // Return the list of Students that are in a Group
+    let { number_of_weeks, ltmt, incidents, roll_states } = await this.groupRepository.findOne(request.body.id)
+
+    const entityManager = getManager()
+
+    const groupStudents = await entityManager.query(
+      `SELECT student_id, first_name, last_name, (first_name || '  ' ||last_name) as full_name from (
+        SELECT  srs.roll_id, r.name,srs.student_id,s.first_name,s.last_name,srs.state, count(*) as incident FROM student_roll_state srs
+        INNER JOIN student as s on s.id = srs.student_id
+        INNER JOIN roll as r on r.id = srs.roll_id
+        WHERE srs.created_at > date('now', '` +
+        -7 * number_of_weeks +
+        ` days')
+        group by srs.state
+      ) as incident_data
+      WHERE incident ` +
+        ltmt +
+        ` ` +
+        incidents +
+        ` and state = '` +
+        roll_states +
+        `'`
+    )
+
+    return groupStudents
   }
 
   async runGroupFilters(request: Request, response: Response, next: NextFunction) {
