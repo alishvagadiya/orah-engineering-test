@@ -1,4 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm"
+import { CreateGroupInput, UpdateGroupInput } from "../interface/group.interface"
 
 @Entity()
 export class Group {
@@ -25,7 +26,9 @@ export class Group {
   })
   run_at: Date
 
-  @Column()
+  @Column({
+    nullable: true,
+  })
   student_count: number
 
   @CreateDateColumn()
@@ -33,4 +36,24 @@ export class Group {
 
   @UpdateDateColumn()
   updated_at: Date
+
+  public prepareToCreate(input: CreateGroupInput) {
+    this.name = input.name
+    this.number_of_weeks = input.number_of_weeks
+    this.roll_states = input.roll_states
+    this.incidents = input.incidents
+    this.ltmt = input.ltmt
+    this.run_at = input.run_at
+    this.student_count = input.student_count
+  }
+
+  public prepareToUpdate(input: UpdateGroupInput) {
+    if (input.name !== undefined) this.name = input.name
+    if (input.number_of_weeks !== undefined) this.number_of_weeks = input.number_of_weeks
+    if (input.roll_states !== undefined) this.roll_states = input.roll_states
+    if (input.incidents !== undefined) this.incidents = input.incidents
+    if (input.ltmt !== undefined) this.ltmt = input.ltmt
+    if (input.run_at !== undefined) this.run_at = input.run_at
+    if (input.student_count !== undefined) this.student_count = input.student_count
+  }
 }
