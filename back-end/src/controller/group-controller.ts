@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express"
 import { getRepository, getManager } from "typeorm"
 import { Group } from "../entity/group.entity"
 import { GroupStudent } from "../entity/group-student.entity"
+import { StudentRollState } from "../entity/student-roll-state.entity"
 import { CreateGroupInput, UpdateGroupInput } from "../interface/group.interface"
 import { CreateGroupStudentInput } from "../interface/group-student.interface"
 import { map } from "lodash"
@@ -9,6 +10,7 @@ import { map } from "lodash"
 export class GroupController {
   private groupRepository = getRepository(Group)
   private groupStudentRepository = getRepository(GroupStudent)
+  private studentRollStateRepository = getRepository(StudentRollState)
 
   async allGroups(request: Request, response: Response, next: NextFunction) {
     const groupsResponse = await this.groupRepository.find()
@@ -83,46 +85,19 @@ export class GroupController {
     return removeResponse
   }
 
-  async getGroupStudents(request: Request, response: Response, next: NextFunction) {
-    let findResponse = await this.groupRepository.findOne(request.body.id)
-    if (!findResponse) {
-      return { status: 204, message: "No data found" }
-    }
-    let { number_of_weeks, ltmt, incidents, roll_states } = findResponse
-    let allGroupStudent = await this.groupStudentList(number_of_weeks, ltmt, incidents, roll_states)
-    if (!allGroupStudent) {
-      return { status: 204, message: "No data found" }
-    }
-    allGroupStudent = allGroupStudent.map((groupStudent) => {
-      const { student_id, first_name, last_name, full_name } = groupStudent
-      return { student_id, first_name, last_name, full_name }
-    })
-    return allGroupStudent
+  async groupStudentList(number_of_weeks: number, ltmt: string, incidents: number, roll_states: string) {
+    let groupStudents = await this.studentRollStateRepository
+      .createQueryBuilder("srs")
+      .select("srs.student_id", "student_id")
+      .addSelect("count(*)", "incident_count")
+      .leftJoin("student", "s", "s.id = srs.student_id")
+      .leftJoin("roll", "r", "r.id = srs.roll_id")
+      .where(`srs.created_at > date('now', '` + -7 * number_of_weeks + ` days')`)
+      .groupBy("srs.state")
+      .having(`incident_count ` + ltmt + ` ` + incidents + ` and state = '` + roll_states + `'`)
+      .getRawMany()
+    return groupStudents
   }
-
-  private async groupStudentList(number_of_weeks: number, ltmt: string, incidents: number, roll_states: string) {
-    const entityManager = getManager()
-
-    return await entityManager.query(
-      `SELECT  srs.roll_id, r.name,srs.student_id,s.first_name,s.last_name,srs.state, count(*) as incident_count, 
-        (first_name || '  ' ||last_name) as full_name
-        FROM student_roll_state srs
-        INNER JOIN student as s on s.id = srs.student_id
-        INNER JOIN roll as r on r.id = srs.roll_id
-        WHERE srs.created_at > date('now', '` +
-        -7 * number_of_weeks +
-        ` days')
-        group by srs.state
-        having incident_count ` +
-        ltmt +
-        ` ` +
-        incidents +
-        ` and state = '` +
-        roll_states +
-        `'`
-    )
-  }
-
   private async removeAllGroupStudent() {
     return await this.groupStudentRepository.clear()
   }
@@ -180,5 +155,19 @@ export class GroupController {
     } else {
       return false
     }
+  }
+
+  async getGroupStudents(request: Request, response: Response, next: NextFunction) {
+    let groupStudents = await this.groupStudentRepository
+      .createQueryBuilder("gs")
+      .select("gs.student_id", "student_id")
+      // .addSelect("gs.incident_count", "incident_count")
+      .addSelect("s.first_name", "first_name")
+      .addSelect("s.last_name", "last_name")
+      .addSelect("s.first_name|| ' '|| s.last_name", "full_name")
+      .leftJoin("student", "s", "s.id = gs.student_id")
+      .where("gs.group_id = :groupId", { groupId: request.body.groupId })
+      .getRawMany()
+    return groupStudents
   }
 }

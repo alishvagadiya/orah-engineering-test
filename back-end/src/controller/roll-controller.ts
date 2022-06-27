@@ -21,7 +21,7 @@ export class RollController {
 
   async createRoll(request: Request, response: Response, next: NextFunction) {
     const { body: params } = request
-    console.log({ params })
+
     const createRollInput: CreateRollInput = {
       name: params.name,
       completed_at: params.completed_at,
