@@ -11,12 +11,20 @@ export class RollController {
   private studentRollStateRepository = getRepository(StudentRollState)
 
   async allRolls(request: Request, response: Response, next: NextFunction) {
-    return this.rollRepository.find()
+    const rollsResponse = await this.rollRepository.find()
+    if (!rollsResponse) {
+      return { status: 400, message: "Missing/Invalid Data" }
+    }
+    return rollsResponse
   }
 
   //get roll name by id
   // async getRoll(request: Request, response: Response, next: NextFunction) {
-  //   return this.rollRepository.findOne(request.body.id)
+  //   const rollsResponse = await this.rollRepository.findOne(request.body.id)
+  //   if (!rollsResponse) {
+  //     return { status: 204, message: "No Content Found" }
+  //   }
+  //   return rollsResponse
   // }
 
   async createRoll(request: Request, response: Response, next: NextFunction) {
@@ -29,7 +37,11 @@ export class RollController {
     const roll = new Roll()
     roll.prepareToCreate(createRollInput)
 
-    return this.rollRepository.save(roll)
+    const rollResponse = await this.rollRepository.save(roll)
+    if (!rollResponse) {
+      return { status: 500, message: "Internal Server error" }
+    }
+    return rollResponse
   }
 
   async updateRoll(request: Request, response: Response, next: NextFunction) {

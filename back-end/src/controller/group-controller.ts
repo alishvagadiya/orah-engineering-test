@@ -23,7 +23,7 @@ export class GroupController {
   async getGroup(request: Request, response: Response, next: NextFunction) {
     const groupResponse = await this.groupRepository.findOne(request.body.id)
     if (!groupResponse) {
-      return { status: 400, message: "Missing/Invalid Data" }
+      return { status: 204, message: "No Content Found" }
     }
     return groupResponse
   }
@@ -43,7 +43,7 @@ export class GroupController {
 
     const groupResponse = await this.groupRepository.save(group)
     if (!groupResponse) {
-      return { status: 400, message: "Missing/Invalid Data" }
+      return { status: 500, message: "Internal Server error" }
     }
     return groupResponse
   }
@@ -67,7 +67,7 @@ export class GroupController {
 
       const updateResponse = await this.groupRepository.save(group)
       if (!updateResponse) {
-        return { status: 400, message: "Missing/Invalid Data" }
+        return { status: 500, message: "Internal Server error" }
       }
       return updateResponse
     })
@@ -80,7 +80,7 @@ export class GroupController {
     }
     const removeResponse = await this.groupRepository.remove(groupToRemove)
     if (!removeResponse) {
-      return { status: 400, message: "Missing/Invalid Data" }
+      return { status: 500, message: "Internal Server error" }
     }
     return removeResponse
   }
